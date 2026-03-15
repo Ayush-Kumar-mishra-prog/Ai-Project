@@ -19,7 +19,7 @@ await connectDB()
 
 // stripe webhooks route
 
-app.post('/api/stripe',express.row({type}), stripeWebbhooks)
+app.post('/api/stripe',express.raw({type: 'application/json'}), stripeWebbhooks)
 
 // Routes
 app.get('/', (req, res) => {

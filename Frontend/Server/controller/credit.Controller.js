@@ -54,7 +54,7 @@ try {
     const userId = req.user._id
     const plan = plans.find(plan=>plan._id === planId)
     if(!plan){
-        return req.json({
+        return res.json({
             sucess:false,
             message:"invalid plan"
         })
