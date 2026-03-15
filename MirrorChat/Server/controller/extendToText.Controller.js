@@ -1,9 +1,15 @@
-import { getDocument } from "pdfjs-dist";
+import { DOMMatrix, ImageData, Path2D } from "@napi-rs/canvas";
+import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
+
+// Polyfill browser APIs required by pdfjs
+global.DOMMatrix = DOMMatrix;
+global.ImageData = ImageData;
+global.Path2D = Path2D;
 
 export const extractPdfText = async (buffer) => {
   const data = new Uint8Array(buffer);
 
-  const pdf = await getDocument({ data }).promise;
+  const pdf = await pdfjsLib.getDocument({ data }).promise;
 
   let documentText = "";
 
