@@ -1,7 +1,6 @@
-
-
 import mongoose from "mongoose";
-import Razorpay from 'razorpay'
+
+// Mongoose schema definition for the Traction model, representing user transactions with details such as plan, amount, credits, and payment status
 
 const tractionSchema = new mongoose.Schema({
     userId: {

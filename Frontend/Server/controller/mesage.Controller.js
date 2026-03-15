@@ -1,14 +1,11 @@
-// Text-based AI chat Message
-
 import Chat from "../models/chat.js";
 import User from "../models/user.js";
 import ai from "../config/gerateText.js";
 import axios from "axios";
 import imagekit from "../config/imagekit.js";
-// import { PDFParse } from 'pdf-parse';
-// import pdfParse from "pdf-parse";
-
 import { extractPdfText } from "./extendToText.Controller.js";
+
+// Text-based AI chat Message
 
 export const textMessageController = async (req, res) => {
   try {
@@ -173,7 +170,7 @@ export const generateNotesController = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    if (req.user.credits < 3) {
+    if (req.user.credits < 5) {
       return res.json({
         success: false,
         message: "Not enough credits to generate notes",
@@ -208,92 +205,92 @@ export const generateNotesController = async (req, res) => {
       contents: `Generate detailed exam notes from this document:\n\n${documentText}`,
       config: {
         systemInstruction: `
-You are an expert academic notes generator.
+        You are an expert academic notes generator.
 
-You are an expert academic assistant, researcher, and teacher.
+        You are an expert academic assistant, researcher, and teacher.
 
-Your task is to carefully analyze the uploaded document and transform it into structured, easy-to-understand study material suitable for students preparing for exams.
+        Your task is to carefully analyze the uploaded document and transform it into structured, easy-to-understand study material suitable for students preparing for exams.
 
-Strict Instructions:
+        Strict Instructions:
 
-1. Read the entire document carefully before generating the response.
-2. Extract the most important information such as concepts, explanations, definitions, examples, and key ideas.
-3. Rewrite the content in simple and clear language suitable for students.
-4. Do not copy sentences directly from the document. Summarize and rephrase them.
-5. Organize the content into logical sections with headings and subheadings.
-6. Use bullet points for clarity.
-7. Highlight important terms using **bold formatting**.
-8. If the document contains multiple topics, create separate sections for each topic.
-9. Ensure the notes are detailed but concise.
-10. Focus on concepts important for exams.
+      1. Read the entire document carefully before generating the response.
+      2. Extract the most important information such as concepts, explanations, definitions, examples, and key ideas.
+      3. Rewrite the content in simple and clear language suitable for students.
+      4. Do not copy sentences directly from the document. Summarize and rephrase them.
+      5. Organize the content into logical sections with headings and subheadings.
+      6. Use bullet points for clarity.
+      7. Highlight important terms using **bold formatting**.
+      8. If the document contains multiple topics, create separate sections for each topic.
+      9. Ensure the notes are detailed but concise.
+      10. Focus on concepts important for exams.
 
-Your output MUST follow this structure:
+      Your output MUST follow this structure:
 
-# Document Title
+      # Document Title
 
-## Overview
-Provide a short explanation of the overall topic.
+      ## Overview
+      Provide a short explanation of the overall topic.
 
-## Key Concepts
-List the main ideas in bullet points.
+      ## Key Concepts
+      List the main ideas in bullet points.
 
-## Detailed Notes
+      ## Detailed Notes
 
-### Topic 1
-Explain the concept clearly using bullet points and short paragraphs.
+      ### Topic 1
+      Explain the concept clearly using bullet points and short paragraphs.
 
-### Topic 2
-Explain the concept clearly using bullet points and short paragraphs.
+      ### Topic 2
+      Explain the concept clearly using bullet points and short paragraphs.
 
-(continue for all topics found in the document)
+      (continue for all topics found in the document)
 
-## Important Definitions
-List important terms and their definitions.
+      ## Important Definitions
+      List important terms and their definitions.
 
-- Term — definition
-- Term — definition
+      - Term — definition
+      - Term — definition
 
-## Important Points for Exams
-Provide key takeaways students should remember for exams.
+      ## Important Points for Exams
+      Provide key takeaways students should remember for exams.
 
-- point
-- point
-- point
+      - point
+      - point
+      - point
 
-## Flashcards (For Revision)
+      ## Flashcards (For Revision)
 
-Q: Question  
-A: Answer  
+      Q: Question  
+      A: Answer  
 
-Q: Question  
-A: Answer  
+      Q: Question  
+      A: Answer  
 
-(Generate at least 5 flashcards)
+      (Generate at least 5 flashcards)
 
-## Multiple Choice Questions
+      ## Multiple Choice Questions
 
-Generate 5 MCQs from the document.
+      Generate 5 MCQs from the document.
 
-Question 1:
-A.
-B.
-C.
-D.
+      Question 1:
+      A.
+      B.
+      C.
+      D.
 
-Correct Answer:
+      Correct Answer:
 
-Question 2:
-A.
-B.
-C.
-D.
+      Question 2:
+      A.
+      B.
+      C.
+      D.
 
-Correct Answer:
+      Correct Answer:
 
-## Summary
+      ## Summary
 
-Provide a concise summary of the entire document in 5-10 bullet points.
-`,
+      Provide a concise summary of the entire document in 5-10 bullet points.
+      `,
       },
     });
 
@@ -311,6 +308,85 @@ Provide a concise summary of the entire document in 5-10 bullet points.
     await chat.save();
 
     await User.updateOne({ _id: userId }, { $inc: { credits: -3 } });
+
+    res.json({
+      success: true,
+      message: reply,
+    });
+  } catch (error) {
+    res.json({
+      success: false,
+      message: error.message || "Something went wrong",
+    });
+  }
+};
+
+// API for understanding the image
+
+export const analyzeImageController = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    if (req.user.credits < 2) {
+      return res.json({
+        success: false,
+        message: "Not enough credits",
+      });
+    }
+
+    const { chatId } = req.body;
+
+    const chat = await Chat.findOne({ userId, _id: chatId });
+
+    if (!chat) {
+      return res.json({
+        success: false,
+        message: "Chat not found",
+      });
+    }
+
+    if (!req.file) {
+      return res.json({
+        success: false,
+        message: "No image uploaded",
+      });
+    }
+
+    // Convert image buffer to base64
+    const base64Image = req.file.buffer.toString("base64");
+
+    // Send image to Gemini
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: [
+        {
+          role: "user",
+          parts: [
+            { text: "Analyze this image and explain it in detail." },
+            {
+              inlineData: {
+                mimeType: req.file.mimetype,
+                data: base64Image,
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    const result = response.text;
+
+    const reply = {
+      role: "assistant",
+      content: result,
+      timeStamp: Date.now(),
+      isImage: true,
+    };
+
+    chat.messages.push(reply);
+    await chat.save();
+
+    await User.updateOne({ _id: userId }, { $inc: { credits: -2 } });
 
     res.json({
       success: true,

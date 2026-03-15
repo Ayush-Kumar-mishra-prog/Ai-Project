@@ -1,77 +1,75 @@
-
-
 // API controller for chat-related operations
 
 import Chat from "../models/chat.js";
 
-export const createChat = async (req,res)=>{
-    try {
-        const userId = req.user._id;
+// create new chat for user
 
-        const chatData = {
-            userId,
-            messages : [],
-            name:"New Chat",
-            userName : req.user.name
-        }
+export const createChat = async (req, res) => {
+  try {
+    const userId = req.user._id;
 
-        await Chat .create(chatData);
-        res.json({
-            sucess:true,
-            message:"Chat created sucessfully",
-             data:{}
-        })
-    } catch (error) {
-        res.status(500).json({
-            sucess:false,
-            message:error.message || "Something went wrong",
-            data:{}
-        })
-    }
-    }
+    const chatData = {
+      userId,
+      messages: [],
+      name: "New Chat",
+      userName: req.user.name,
+    };
 
-    // API controller for fetching all chats of a user
+    await Chat.create(chatData);
+    res.json({
+      sucess: true,
+      message: "Chat created sucessfully",
+      data: {},
+    });
+  } catch (error) {
+    res.status(500).json({
+      sucess: false,
+      message: error.message || "Something went wrong",
+      data: {},
+    });
+  }
+};
 
-    export const getChat = async (req,res)=>{
-    try {
-        const userId = req.user._id;
+// API controller for fetching all chats of a user
 
-       const chats = await Chat.find({userId}).sort({updatedAt:-1})
-        res.json({
-            sucess:true,
-            message:"Chats",
-             data:{chats}
-        })
-    } catch (error) {
-        res.status(500).json({
-            sucess:false,
-            message:error.message || "Something went wrong",
-            data:{}
-        })
-    }
-    }
+export const getChat = async (req, res) => {
+  try {
+    const userId = req.user._id;
 
-    // API for deleting chat
+    const chats = await Chat.find({ userId }).sort({ updatedAt: -1 });
+    res.json({
+      sucess: true,
+      message: "Chats",
+      data: { chats },
+    });
+  } catch (error) {
+    res.status(500).json({
+      sucess: false,
+      message: error.message || "Something went wrong",
+      data: {},
+    });
+  }
+};
 
-    export const deleteChat = async (req,res)=>{
-    try {
-        const userId = req.user._id;
+// API for deleting chat
 
-       const {chatId} = req.body
+export const deleteChat = async (req, res) => {
+  try {
+    const userId = req.user._id;
 
-       await Chat.deleteOne({_id:chatId ,userId})
-        res.json({
-            sucess:true,
-            message:"Chat deleted sucessfully",
-             data:{}
-        })
-    } catch (error) {
-        res.status(500).json({
-            sucess:false,
-            message:error.message || "Something went wrong",
-            data:{}
-        })
-    }
-    }
+    const { chatId } = req.body;
 
-    
+    await Chat.deleteOne({ _id: chatId, userId });
+    res.json({
+      sucess: true,
+      message: "Chat deleted sucessfully",
+      data: {},
+    });
+  } catch (error) {
+    res.status(500).json({
+      sucess: false,
+      message: error.message || "Something went wrong",
+      data: {},
+    });
+  }
+};

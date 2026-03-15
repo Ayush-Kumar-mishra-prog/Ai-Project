@@ -21,18 +21,12 @@ const userSchema = new mongoose.Schema({
   },
 });
 
-// hased password before saving the user
-// userSchema.pre("save", async function (next) {
-//   if (!this.isModified("password")) {
-//     return next();
-//   }
-//   const salt = await bcrypt.genSalt(10);
-//   this.password = await bcrypt.hash(this.password, salt);
-//   next();
-// });
+// Pre-save hook to hash the user's password before saving it to the database
 userSchema.methods.isPasswordMatched = async function (password) {
   return await bcrypt.compare(password, this.password);
 };
+
+// Generates a JWT access token for the user, containing their ID, name, and email, with an expiration time defined in environment variables
 userSchema.methods.generateAccessToken = function () {
   return jwt.sign(
     {

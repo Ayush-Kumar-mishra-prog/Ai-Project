@@ -1,5 +1,8 @@
 import mongoose from "mongoose";
 
+// Mongoose schema definition for the Chat model, representing a chat conversation with user details and messages
+
+
 const chatSchema = new mongoose.Schema(
   {
     userId: { type: String, ref: "User", required: true },

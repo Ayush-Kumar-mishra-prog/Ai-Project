@@ -1,5 +1,7 @@
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
 
+// Function to extract text from PDF buffer using pdfjs-dist library
+
 export const extractPdfText = async (buffer) => {
   const data = new Uint8Array(buffer);
 
@@ -12,9 +14,7 @@ export const extractPdfText = async (buffer) => {
 
     const textContent = await page.getTextContent();
 
-    const pageText = textContent.items
-      .map(item => item.str)
-      .join(" ");
+    const pageText = textContent.items.map((item) => item.str).join(" ");
 
     documentText += pageText + "\n";
   }
