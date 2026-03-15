@@ -1,11 +1,9 @@
-import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
-
-// Function to extract text from PDF buffer using pdfjs-dist library
+import { getDocument } from "pdfjs-dist";
 
 export const extractPdfText = async (buffer) => {
   const data = new Uint8Array(buffer);
 
-  const pdf = await pdfjsLib.getDocument({ data }).promise;
+  const pdf = await getDocument({ data }).promise;
 
   let documentText = "";
 
