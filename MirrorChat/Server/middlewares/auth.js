@@ -9,7 +9,7 @@ export const getUserData = async (req, res, next) => {
 
     if (!token) {
       return res.status(401).json({
-        sucess: false,
+        success: false,
         error: "Token not provided",
       });
     }
@@ -20,7 +20,7 @@ export const getUserData = async (req, res, next) => {
 
     if (!user) {
       return res.status(401).json({
-        sucess: false,
+        success: false,
         error: "Unauthorized access user not found",
       });
     }

@@ -1,6 +1,11 @@
 import logo from "./logo.svg";
+import pageLogo from './logoo.svg'
+import pageLogo_dark from './ChatGPT Image Mar 17, 2026, 09_06_22 AM.png'
+import pageLogo_white from './ChatGPT Image Mar 17, 2026, 09_06_22 AM.svg'
 import logo_full from "./logo_full.svg";
+import logo_full_dark_g from './Gemini_Generated_Image_iwl7woiwl7woiwl7.png'
 import logo_full_dark from "./logo_full_dark.svg";
+import final_logo from './Untitled Project.png'
 import search_icon from "./search_icon.svg";
 import user_icon from "./user_icon.svg";
 import theme_icon from "./theme_icon.svg";
@@ -42,7 +47,11 @@ export const assets = {
     logout_icon,
     logo_full_dark,
     diamond_icon,
-    gallery_icon
+    gallery_icon,
+    pageLogo,pageLogo_dark,
+    pageLogo_white,
+    logo_full_dark_g,
+    final_logo
 };
 
 export const dummyUserData = {
@@ -83,7 +92,7 @@ export const dummyChats = [
     {
         "_id": "689de4bbaa932dc3a8ef6cd7",
         "userId": "689c6deed410acddc0d95a0e",
-        "userName": "GreatStack",
+        "userName": "Ayush Kumar mishra",
         "name": "New Chat",
         "messages": [
             {
@@ -267,13 +276,13 @@ export const dummyChats = [
         ],
         "createdAt": "2025-08-13T17:29:52.421Z",
         "updatedAt": "2025-08-14T09:39:19.046Z",
-        "userName": "GreatStack"
+        "userName": "Ayush Kumar mishra"
     },
     {
         "_id": Date.now(),
         "userId": "gs123456789",
         "name": "New Chat",
-        "userName": "GreatStack",
+        "userName": "Ayush Kumar mishra",
         "messages": [],
         "createdAt": "2025-08-13T17:29:52.421Z",
         "updatedAt": "2025-08-14T09:39:19.046Z",
@@ -283,46 +292,46 @@ export const dummyChats = [
 export const dummyPublishedImages = [
     {
         "imageUrl": ai_image11,
-        "userName": "GreatStack"
+        "userName": "Ayush Kumar mishra"
     },
     {
         "imageUrl": ai_image10,
-        "userName": "GreatStack"
+        "userName": "Ayush Kumar mishra"
     },
     {
         "imageUrl": ai_image9,
-        "userName": "GreatStack"
+        "userName": "Ayush Kumar mishra"
     },
     {
         "imageUrl": ai_image8,
-        "userName": "GreatStack"
+        "userName": "Ayush Kumar mishra"
     },
     {
         "imageUrl": ai_image7,
-        "userName": "GreatStack"
+        "userName": "Ayush Kumar mishra"
     },
     {
         "imageUrl": ai_image6,
-        "userName": "GreatStack"
+        "userName": "Ayush Kumar mishra"
     },
     {
         "imageUrl": ai_image5,
-        "userName": "GreatStack"
+        "userName": "Ayush Kumar mishra"
     },
     {
         "imageUrl": ai_image4,
-        "userName": "GreatStack"
+        "userName": "Ayush Kumar mishra"
     },
     {
         "imageUrl": ai_image3,
-        "userName": "GreatStack"
+        "userName": "Ayush Kumar mishra"
     },
     {
         "imageUrl": ai_image2,
-        "userName": "GreatStack"
+        "userName": "Ayush Kumar mishra"
     },
     {
         "imageUrl": ai_image1,
-        "userName": "GreatStack"
+        "userName": "Ayush Kumar mishra"
     }
 ]

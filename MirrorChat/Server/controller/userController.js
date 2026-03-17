@@ -7,7 +7,7 @@ const login = async (req, res) => {
     // validate the request body
     if ([email, password].some((field) => field.trim() === "")) {
       return res.status(400).json({
-        sucess: false,
+        success: false,
         message: "name, email, password is requried",
         data: {},
       });
@@ -16,7 +16,7 @@ const login = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({
-        sucess: false,
+        success: false,
         message: "Invalid creditionals",
         data: {},
       });
@@ -25,7 +25,7 @@ const login = async (req, res) => {
 
     if (!passwordMathchd) {
       return res.status(400).json({
-        sucess: false,
+        success: false,
         message: "Invalid creditionals",
         data: {},
       });
@@ -33,15 +33,14 @@ const login = async (req, res) => {
     const token = await user.generateAccessToken();
     console.log("Access Token:", token);
     return res.status(200).json({
-      sucess: true,
-      message: "You have logged in sucessfully",
-      data: {
-        token: token,
-      },
+      success: true,
+      message: "You have logged in successfully",
+
+      token,
     });
   } catch (e) {
     return res.status(500).json({
-      sucess: false,
+      success: false,
       message: e.message || "Something went wrong",
       data: {},
     });
@@ -53,7 +52,7 @@ const register = async (req, res) => {
 
     if ([name, email, password].some((field) => field.trim() === "")) {
       return res.status(400).json({
-        sucess: false,
+        success: false,
         message: "name, email, password is requried",
         data: {},
       });
@@ -62,7 +61,7 @@ const register = async (req, res) => {
     const user = await User.findOne({ email });
     if (user) {
       return res.status(400).json({
-        sucess: false,
+        success: false,
         message: "email already exist",
         data: {},
       });
@@ -74,32 +73,37 @@ const register = async (req, res) => {
       password: hashPassword,
     });
     return res.status(200).json({
-      sucess: true,
-      message: "You have sucessfully registerd.",
+      success: true,
+      message: "You have successfully registerd.",
       data: {},
     });
   } catch (e) {
     return res.status(500).json({
-      sucess: false,
+      success: false,
       message: e.message || "Something went wrong",
       data: {},
     });
   }
 };
 
-// Function to get all the users
-
+// Function to get the current authenticated user data
 const getUser = async (req, res) => {
   try {
-    const users = await User.find().select("-password -__v");
+    // The user is already attached to req.user by the getUserData middleware
+    const user = req.user;
     return res.status(200).json({
-      sucess: true,
-      message: "All users fetched sucessfully",
-      data: users,
+      success: true,
+      message: "User data fetched successfully",
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        credits: user.credits,
+      },
     });
   } catch (e) {
     return res.status(500).json({
-      sucess: false,
+      success: false,
       message: e.message || "Something went wrong",
       data: {},
     });

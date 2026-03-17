@@ -13,7 +13,7 @@ export const textMessageController = async (req, res) => {
 
     if (req.user.credits < 1) {
       return res.json({
-        sucess: false,
+        success: false,
         message: "You have not enough credits to generate a response",
       });
     }
@@ -22,7 +22,7 @@ export const textMessageController = async (req, res) => {
     const chat = await Chat.findOne({ userId, _id: chatId });
     if (!chat) {
       return res.status(404).json({
-        sucess: false,
+        success: false,
         message: "Chat not found",
       });
     }
@@ -35,7 +35,7 @@ export const textMessageController = async (req, res) => {
     });
 
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-2.5-flash",
       contents: prompt,
       config: {
         systemInstruction:
@@ -52,7 +52,7 @@ export const textMessageController = async (req, res) => {
       isImage: false,
     };
     res.json({
-      sucess: true,
+      success: true,
       message: reply,
     });
 
@@ -62,7 +62,7 @@ export const textMessageController = async (req, res) => {
     await User.updateOne({ _id: userId }, { $inc: { credits: -1 } });
   } catch (error) {
     res.json({
-      sucess: false,
+      success: false,
       message: error.message || "Something went wrong",
     });
   }
@@ -115,7 +115,7 @@ export const imageMessageController = async (req, res) => {
     });
 
     const reply = {
-      role: "assistnat",
+      role: "assistant",
       content: uploadResponse.url,
       timeStamp: Date.now(),
       isImage: true,
@@ -374,13 +374,13 @@ export const analyzeImageController = async (req, res) => {
       ],
     });
 
-    const result = response.text;
+    const result = response.candidates[0].content.parts[0].text;
 
     const reply = {
       role: "assistant",
       content: result,
       timeStamp: Date.now(),
-      isImage: true,
+      isImage: false,
     };
 
     chat.messages.push(reply);

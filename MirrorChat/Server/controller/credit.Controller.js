@@ -55,7 +55,7 @@ export const getPlans = async (req, res) => {
     });
   } catch (error) {
     res.json({
-      sucess: false,
+      success: false,
       message: error.message,
     });
   }
@@ -73,7 +73,7 @@ export const purchasePlans = async (req, res) => {
     const plan = plans.find((plan) => plan._id === planId);
     if (!plan) {
       return res.json({
-        sucess: false,
+        success: false,
         message: "invalid plan",
       });
     }
@@ -114,7 +114,7 @@ export const purchasePlans = async (req, res) => {
     });
   } catch (error) {
     res.json({
-      sucess: false,
+      success: false,
       message: error.message,
     });
   }

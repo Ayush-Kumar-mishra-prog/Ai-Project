@@ -13,13 +13,12 @@ dotenv.config();
 const app = express();
 
 app.use(cors());
+// stripe webhooks route (must be before express.json for signature verification)
+app.post('/api/stripe', express.raw({ type: 'application/json' }), stripeWebbhooks);
+
 app.use(express.json());
 // app.use(express.urlencoded({ extended: true }));
 await connectDB()
-
-// stripe webhooks route
-
-app.post('/api/stripe',express.raw({type: 'application/json'}), stripeWebbhooks)
 
 // Routes
 app.get('/', (req, res) => {

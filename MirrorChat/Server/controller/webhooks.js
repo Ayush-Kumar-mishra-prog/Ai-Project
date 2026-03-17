@@ -5,6 +5,7 @@ import User from "../models/user.js";
 // Webhook handler for Stripe events related to payments and subscriptions
 
 export const stripeWebbhooks = async (req, res) => {
+  console.log("Webhook called");
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   const sig = req.headers["stripe-signature"];
   let event;
@@ -21,33 +22,60 @@ export const stripeWebbhooks = async (req, res) => {
 
   try {
     switch (event.type) {
+      case "checkout.session.completed": {
+        const session = event.data.object;
+        const { transactionId, appId } = session.metadata || {};
+        if (appId !== "MirrorChat") {
+          return res.status(400).send("Invalid appId");
+        }
+        if (!transactionId) {
+          return res.status(400).send("Missing transactionId");
+        }
+        const transaction = await Traction.findOne({
+          _id: transactionId,
+          isPaid: false,
+        });
+        if (!transaction) {
+          break;
+        }
+
+        await User.updateOne(
+          { _id: transaction.userId },
+          { $inc: { credits: transaction.credits } },
+        );
+
+        transaction.isPaid = true;
+        await transaction.save();
+        break;
+      }
       case "payment_intent.succeeded": {
         const paymentIntent = event.data.object;
         const sessionList = await stripe.checkout.sessions.list({
           payment_intent: paymentIntent.id,
         });
         const session = sessionList.data[0];
-        const { transactionId, appId } = session.metadata;
-        if (appId == "MirrorChat") {
-          const transaction = await Traction.findOne({
-            _id: transactionId,
-            isPaid: false,
-          });
-
-          // update credits and transaction status
-
-          await User.updateOne(
-            { _id: transaction.userId },
-            { $inc: { credits: transaction.credits } },
-          );
-
-          // update payment status
-
-          transaction.isPaid = true;
-          await transaction.save();
-        } else {
+        const { transactionId, appId } = session?.metadata || {};
+        if (appId !== "MirrorChat") {
           return res.status(400).send("Invalid appId");
         }
+        if (!transactionId) {
+          return res.status(400).send("Missing transactionId");
+        }
+        const transaction = await Traction.findOne({
+          _id: transactionId,
+          isPaid: false,
+        });
+        if (!transaction) {
+          break;
+        }
+
+        await User.updateOne(
+          { _id: transaction.userId },
+          { $inc: { credits: transaction.credits } },
+        );
+
+        transaction.isPaid = true;
+        await transaction.save();
         break;
       }
       // Handle successful payment intent

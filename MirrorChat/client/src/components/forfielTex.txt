@@ -1,0 +1,20 @@
+ const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      if (selectedFile.type.startsWith("image/")) {
+        setMode("analyze-image");
+      } else {
+        setMode("notes-gen");
+      }
+      setFile(selectedFile);
+      setPrompt(`Uploaded: ${selectedFile.name}`);
+    }
+  };
+
+   <input
+          type="file"
+          ref={fileRef}
+          onChange={handleFileChange}
+          style={{ display: "none" }}
+          accept="image/*,.pdf,.doc,.docx,.txt" // Allow images and documents
+        />
