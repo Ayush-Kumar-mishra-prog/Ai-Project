@@ -113,10 +113,12 @@ const ChatBox = () => {
       if (data.success) {
         setMessages((prev) => [...prev, data.message]);
         fetchUser();
+        setMode("text");
       } else {
         toast.error(data.message);
         // Remove user message if failed
         setMessages((prev) => prev.slice(0, -1));
+        setMode("text");
       }
     } catch (error) {
       toast.error(error.message);
@@ -154,7 +156,9 @@ const ChatBox = () => {
                 alt=""
                 className="w-full max-w-56 sm:max-w-68"
               /> */}
-              <p className="text-violet-700 text-4xl dark:text-blue-700">MirrorChat</p>
+              <p className="text-violet-700 text-4xl dark:text-blue-700">
+                MirrorChat
+              </p>
               <p className="mt-5 text-4xl sm:text-6xl text-center text-gray-400 dark:text-white">
                 Ask me anything
               </p>

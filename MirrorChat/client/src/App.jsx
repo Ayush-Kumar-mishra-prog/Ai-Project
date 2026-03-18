@@ -9,16 +9,16 @@ import Loading from "./pages/Loading";
 import { assets } from "./assets/assets";
 import "./assets/prism.css";
 import { useAppContenxt } from "./context/AppContenxt";
-import {Toaster} from 'react-hot-toast'
+import { Toaster } from "react-hot-toast";
 
 const App = () => {
-  const {user,loadingUser} = useAppContenxt()
+  const { user, loadingUser } = useAppContenxt();
   const { pathname } = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   if (pathname === "/loading" || loadingUser) return <Loading />;
   return (
     <>
-    <Toaster />
+      <Toaster />
       {!isMenuOpen && (
         <img
           src={assets.menu_icon}
@@ -28,22 +28,22 @@ const App = () => {
         />
       )}
 
-      {user ? ( <div className="dark:bg-gradient-to-b from-[#242124] to-[#000000] dark:text-white">
-        <div className="flex h-screen w-screen">
-          <Sidebar isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
-          <Routes>
-            <Route path="/" element={<ChatBox />} />
-            <Route path="/community" element={<Community />} />
-            <Route path="/credits" element={<Credits />} />
-          </Routes>
+      {user ? (
+        <div className="dark:bg-gradient-to-b from-[#242124] to-[#000000] dark:text-white">
+          <div className="flex h-screen w-screen">
+            <Sidebar isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} />
+            <Routes>
+              <Route path="/" element={<ChatBox />} />
+              <Route path="/community" element={<Community />} />
+              <Route path="/credits" element={<Credits />} />
+            </Routes>
+          </div>
         </div>
-      </div>):(
-       <div className="bg-gradient-to-b from-[#242124] to-[#000000] flex items-center justify-center h-screen w-screen">
-        <Login/>
-       </div>
-
+      ) : (
+        <div className="bg-gradient-to-b from-[#242124] to-[#000000] flex items-center justify-center h-screen w-screen">
+          <Login />
+        </div>
       )}
-     
     </>
   );
 };

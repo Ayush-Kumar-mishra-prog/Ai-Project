@@ -39,7 +39,6 @@ const Credits = () => {
     } catch (error) {
       toast.error(error.message);
     }
-    
   };
   useEffect(() => {
     fetchPlans();

@@ -5,47 +5,65 @@ import moment from "moment";
 import toast from "react-hot-toast";
 
 const Sidebar = ({ isMenuOpen, setIsMenuOpen }) => {
-  const { chats, setSelectedChat, theme, setTheme, user, navigate, createNewChat,axios,fetchUsersChat,setToken,token,setChats} =
-    useAppContenxt();
+  const {
+    chats,
+    setSelectedChat,
+    theme,
+    setTheme,
+    user,
+    navigate,
+    createNewChat,
+    axios,
+    fetchUsersChat,
+    setToken,
+    token,
+    setChats,
+  } = useAppContenxt();
 
   // Debug logging
 
-
   const [search, setSearch] = useState("");
 
-  const logout = ()=>{
+  const logout = () => {
     localStorage.removeItem("token");
     setToken(null);
     toast.success("Logged out successfully");
-  }
+  };
 
-  const deleteChat = async (e,chatId) => {
-try {
-  e.stopPropagation();
-  const confirm = window.confirm("Are you sure you want to delete this chat?");
-  if(!confirm) return;
-  const {data} = await axios.post(`/api/chat/delete/`,{chatId},{
-    headers:{Authorization:token}
-  });
-  if(data.success){
-    setChats(prev => prev.filter(chat => chat._id !== chatId));
-    await fetchUsersChat();
-    toast.success(data.message);
-  }
-} catch (error) {
-  toast.error(error.message);
-}
-  }
-
+  const deleteChat = async (e, chatId) => {
+    try {
+      e.stopPropagation();
+      const confirm = window.confirm(
+        "Are you sure you want to delete this chat?",
+      );
+      if (!confirm) return;
+      const { data } = await axios.post(
+        `/api/chat/delete/`,
+        { chatId },
+        {
+          headers: { Authorization: token },
+        },
+      );
+      if (data.success) {
+        setChats((prev) => prev.filter((chat) => chat._id !== chatId));
+        await fetchUsersChat();
+        toast.success(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
 
   return (
     <div
       className={`flex flex-col h-screen min-w-72 p-5 dark:bg-linear-to-b from-[#242124]/30 to-[#000000] border-r border-[#80609F]/30 backdrop-blur-3xl transition-all duration-500 max-md:absolute left-0 z-1 ${!isMenuOpen && "max-md:-translate-x-full"}`}
     >
-      
-<p className="text-violet-700 text-4xl dark:text-white">MirrorChat</p>
+      <p className="text-violet-700 text-4xl dark:text-white">MirrorChat</p>
       {/* New chat button */}
-      <button onClick={createNewChat} className="flex justify-center items-center w-full py-2 mt-10 text-white bg-linear-to-r from-[#A456F7] to-[#3D81F6] text-sm rounded-md cursor-pointer ">
+      <button
+        onClick={createNewChat}
+        className="flex justify-center items-center w-full py-2 mt-10 text-white bg-linear-to-r from-[#A456F7] to-[#3D81F6] text-sm rounded-md cursor-pointer "
+      >
         <span className="mr-2 text-xl">+</span>New Chat
       </button>
 
@@ -88,10 +106,15 @@ try {
                   {moment(chat.updatedAt).fromNow()}
                 </p>
               </div>
-              <img  onClick={e=>toast.promise(deleteChat(e,chat._id),{loading:`Deleting...`})}
+              <img
+                onClick={(e) =>
+                  toast.promise(deleteChat(e, chat._id), {
+                    loading: `Deleting...`,
+                  })
+                }
                 src={assets.bin_icon}
                 alt=""
-                className="hidden group-hover:block w-4 cursor-pointer not-dark:invert"
+                className=" group-hover:block w-4 cursor-pointer not-dark:invert"
               />
             </div>
           ))}
@@ -152,8 +175,9 @@ try {
         </p>
         {user && (
           <img
-            src={assets.logout_icon} onClick={logout}
-            className="h-5 cursor-pointer hidden not-dark:invert group-hover:block"
+            src={assets.logout_icon}
+            onClick={logout}
+            className="h-5 cursor-pointer  not-dark:invert group-hover:block"
           />
         )}
       </div>

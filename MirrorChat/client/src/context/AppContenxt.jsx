@@ -24,8 +24,7 @@ export const AppContextProvider = ({ children }) => {
       });
       if (data.success) {
         setUser(data.user);
-        console.log(data.user);
-        // Fetch user's chats after user data is loaded
+
         await fetchUsersChat();
       } else {
         toast.error(data.message);
@@ -43,7 +42,7 @@ export const AppContextProvider = ({ children }) => {
       const response = await axios.get("/api/chat/create", {
         headers: { Authorization: token },
       });
-      console.log("Create chat response:", response.data);
+
       await fetchUsersChat();
     } catch (error) {
       toast.error(error.message);
@@ -51,19 +50,15 @@ export const AppContextProvider = ({ children }) => {
   };
   const fetchUsersChat = async () => {
     try {
-      console.log("Fetching user chats...");
       const { data } = await axios.get("/api/chat/get", {
         headers: { Authorization: token },
       });
-      console.log("Chat API response:", data);
+
       if (data.success) {
-        console.log("Setting chats to:", data.chats);
         setChats(data.chats);
 
         if (data.chats.length === 0) {
-          console.log("No chats found, creating new chat...");
           await createNewChat();
-          // return fetchUsersChat();
         } else {
           setSelectedChat(data.chats[0]);
         }
@@ -90,9 +85,6 @@ export const AppContextProvider = ({ children }) => {
       document.documentElement.classList.remove("dark");
     }
   }, [theme]);
-  // useEffect(() => {
-  //   fetchUser();
-  // }, []);
 
   const value = {
     navigate,
