@@ -51,15 +51,16 @@ export const textMessageController = async (req, res) => {
       timeStamp: Date.now(),
       isImage: false,
     };
-    res.json({
-      success: true,
-      message: reply,
-    });
 
     chat.messages.push(reply);
     await chat.save();
 
     await User.updateOne({ _id: userId }, { $inc: { credits: -1 } });
+
+    res.json({
+      success: true,
+      message: reply,
+    });
   } catch (error) {
     res.json({
       success: false,
@@ -122,13 +123,14 @@ export const imageMessageController = async (req, res) => {
       isPublished,
     };
 
+    chat.messages.push(reply);
+    await chat.save();
+    await User.updateOne({ _id: userId }, { $inc: { credits: -2 } });
+
     res.json({
       success: true,
       message: reply,
     });
-    chat.messages.push(reply);
-    await chat.save();
-    await User.updateOne({ _id: userId }, { $inc: { credits: -2 } });
   } catch (error) {
     res.json({
       success: false,

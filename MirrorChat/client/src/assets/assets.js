@@ -5,7 +5,8 @@ import pageLogo_white from './ChatGPT Image Mar 17, 2026, 09_06_22 AM.svg'
 import logo_full from "./logo_full.svg";
 import logo_full_dark_g from './Gemini_Generated_Image_iwl7woiwl7woiwl7.png'
 import logo_full_dark from "./logo_full_dark.svg";
-import final_logo from './Untitled Project.png'
+import final_logo from './Untitled Project.png';
+import logo_icon_f from './favicon.png'
 import search_icon from "./search_icon.svg";
 import user_icon from "./user_icon.svg";
 import theme_icon from "./theme_icon.svg";
@@ -51,7 +52,8 @@ export const assets = {
     pageLogo,pageLogo_dark,
     pageLogo_white,
     logo_full_dark_g,
-    final_logo
+    final_logo,
+    logo_icon_f
 };
 
 export const dummyUserData = {
