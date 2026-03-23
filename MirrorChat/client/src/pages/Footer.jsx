@@ -13,9 +13,7 @@ const Footer = () => {
             
             <footer className="mt-20 flex flex-col items-center border-t-2 border-gray-300 justify-around w-full py-16 text-sm  text-gray-800/70 rounded-md ">
                 <div className="flex items-center gap-8">
-                    <a href="#home" className="font-medium text-gray-200 hover:text-black transition-all">
-                        Home
-                    </a>
+                    
                     <a href="#features" className="font-medium text-gray-200 hover:text-black transition-all">
                         Features
                     </a>
@@ -25,9 +23,7 @@ const Footer = () => {
                     <a href="/login" className="font-medium text-gray-200 hover:text-black transition-all">
                         Login
                     </a>
-                    <a href="#" className="font-medium text-gray-200 hover:text-black transition-all">
-                        Community
-                    </a>
+                    
                 </div>
                 <div className="flex items-center gap-4 mt-8 text-indigo-500">
                     <a href="https://www.facebook.com/profile.php?id=61564353241438" className="hover:-translate-y-0.5 transition-all duration-300">

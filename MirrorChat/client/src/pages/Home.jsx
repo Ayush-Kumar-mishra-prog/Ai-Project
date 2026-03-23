@@ -32,8 +32,8 @@ const Home = () => {
                 `}
             </style>
 
-            <section id="home" className="relative min-h-screen flex flex-col items-center max-md:px-2 bg-[#020319] pb-20 pt-5 bg-[url('https://assets.prebuiltui.com/images/components/hero-section/hero-linear-gradient.png')] bg-cover bg-center bg-no-repeat">
-                <nav className="flex items-center w-full max-w-6xl justify-between text-slate-100   backdrop-blur-sm rounded-md fixed top-3  z-80">
+            <section id="home" className="relative min-h-screen flex flex-col items-center max-md:px-2 bg-[#020319] pb-20 pt-5 bg-[url('https://assets.prebuiltui.com/images/components/hero-section/hero-linear-gradient.png')] bg-cover bg-center bg-no-repeat overflow-x-hidden">
+                <nav className="flex items-center w-full max-w-6xl justify-between text-slate-100">
                    <p className="text-xl font-bold text-white">MirrorChat</p>
                     <div id="menu" className={`${mobileOpen ? 'max-md:left-0' : 'max-md:-left-full'} max-md:fixed max-md:bg-black/70 max-md:backdrop-blur max-md:top-0 transition-all duration-300 max-md:h-screen max-md:w-full max-md:z-50 max-md:justify-center flex-col md:flex-row flex items-center gap-2 text-sm`}>
                         <a className="px-4 py-2  text-slate-100 hover:text-slate-200" href="#home" onClick={() => setMobileOpen(false)}>Home</a>
