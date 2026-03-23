@@ -6,6 +6,7 @@ import Login from "./pages/Login";
 import Community from "./pages/Community";
 import Credits from "./pages/Credits";
 import Loading from "./pages/Loading";
+import Home from './pages/Home'
 import { assets } from "./assets/assets";
 import "./assets/prism.css";
 import { useAppContenxt } from "./context/AppContenxt";
@@ -36,13 +37,19 @@ const App = () => {
               <Route path="/" element={<ChatBox />} />
               <Route path="/community" element={<Community />} />
               <Route path="/credits" element={<Credits />} />
+              
             </Routes>
           </div>
         </div>
       ) : (
-        <div className="bg-gradient-to-b from-[#242124] to-[#000000] flex items-center justify-center h-screen w-screen">
-          <Login />
-        </div>
+        <Routes>
+          <Route path="/" element={<Home />} />
+             
+
+          <Route path="/login" element={<Login />} />
+          
+        </Routes>
+     
       )}
     </>
   );

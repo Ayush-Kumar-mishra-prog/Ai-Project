@@ -108,6 +108,7 @@ export const purchasePlans = async (req, res) => {
       metadata: { transactionId: traction._id.toString(), appId: "MirrorChat" },
       expires_at: Math.floor(Date.now() / 1000) + 30 * 60, // 30 minutes from now
     });
+    
     res.json({
       success: true,
       url: session.url,

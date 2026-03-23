@@ -3,6 +3,7 @@ import { useAppContenxt } from "../context/AppContenxt";
 import { assets } from "../assets/assets";
 import moment from "moment";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 const Sidebar = ({ isMenuOpen, setIsMenuOpen }) => {
   const {
@@ -23,11 +24,13 @@ const Sidebar = ({ isMenuOpen, setIsMenuOpen }) => {
   // Debug logging
 
   const [search, setSearch] = useState("");
+ 
 
   const logout = () => {
     localStorage.removeItem("token");
     setToken(null);
     toast.success("Logged out successfully");
+    navigate("/")
   };
 
   const deleteChat = async (e, chatId) => {

@@ -24,14 +24,13 @@ const login = async (req, res) => {
     const passwordMathchd = await user.isPasswordMatched(password);
 
     if (!passwordMathchd) {
-      return res.status(400).json({
+      return res.status(200).json({
         success: false,
         message: "Invalid creditionals",
         data: {},
       });
     }
     const token = await user.generateAccessToken();
-    console.log("Access Token:", token);
     return res.status(200).json({
       success: true,
       message: "You have logged in successfully",
@@ -60,22 +59,23 @@ const register = async (req, res) => {
     // check user email is already exist or not
     const user = await User.findOne({ email });
     if (user) {
-      return res.status(400).json({
+      return res.status(200).json({
         success: false,
         message: "email already exist",
         data: {},
       });
     }
     const hashPassword = await bcrypt.hash(password, 10);
-    await User.create({
+    const newUser = await User.create({
       name,
       email,
       password: hashPassword,
     });
+    const token = await newUser.generateAccessToken();
     return res.status(200).json({
       success: true,
       message: "You have successfully registerd.",
-      data: {},
+      token,
     });
   } catch (e) {
     return res.status(500).json({

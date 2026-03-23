@@ -17,10 +17,15 @@ export const AppContextProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem("token") || null);
 
   const [loadingUser, setLoadingUser] = useState(true);
-  const fetchUser = async () => {
+  const fetchUser = async (overrideToken) => {
     try {
+      const authToken = overrideToken || token;
+      if (!authToken) {
+        setLoadingUser(false);
+        return;
+      }
       const { data } = await axios.get("/api/user/data", {
-        headers: { Authorization: token },
+        headers: { Authorization: authToken },
       });
       if (data.success) {
         setUser(data.user);
@@ -30,6 +35,12 @@ export const AppContextProvider = ({ children }) => {
         toast.error(data.message);
       }
     } catch (error) {
+      if (error?.response?.status === 401) {
+        setUser(null);
+        setToken(null);
+        localStorage.removeItem("token");
+        return;
+      }
       toast.error(error.message);
     } finally {
       setLoadingUser(false);
@@ -50,6 +61,9 @@ export const AppContextProvider = ({ children }) => {
   };
   const fetchUsersChat = async () => {
     try {
+      if (!token) {
+        return;
+      }
       const { data } = await axios.get("/api/chat/get", {
         headers: { Authorization: token },
       });
@@ -66,6 +80,12 @@ export const AppContextProvider = ({ children }) => {
         toast.error(data.message);
       }
     } catch (error) {
+      if (error?.response?.status === 401) {
+        setUser(null);
+        setToken(null);
+        localStorage.removeItem("token");
+        return;
+      }
       toast.error(error.message);
     }
   };

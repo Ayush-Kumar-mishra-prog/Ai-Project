@@ -16,6 +16,15 @@ const ChatBox = () => {
   const [isPublished, setIsPublished] = useState(false);
   const [file, setFile] = useState(null);
   const [selectedFileName, setSelectedFileName] = useState("");
+   const textareaRef = useRef(null);
+
+
+
+  const textInput = () => {
+    const el = textareaRef.current;
+    el.style.height = "auto";
+    el.style.height = el.scrollHeight + "px";
+  };
 
   const onSubmit = async (e) => {
     try {
@@ -23,31 +32,75 @@ const ChatBox = () => {
       if (!user) return toast("Login to send message");
       setLoading(true);
       const promptCoppy = prompt;
-      setPrompt("");
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "User",
-          content: prompt,
-          timeStamp: Date.now(),
-          isImage: false,
-        },
-      ]);
 
-      const { data } = await axios.post(
-        `/api/message/${mode}`,
-        { chatId: selectedChat._id, prompt, isPublished },
-        {
-          headers: { Authorization: token },
-        },
-      );
+      if (file) {
+        const userContentParts = [`[Image] ${selectedFileName}`];
+        if (prompt?.trim()) {
+          userContentParts.push(prompt.trim());
+        }
 
-      if (data.success) {
-        setMessages((prev) => [...prev, data.message]);
-        fetchUser();
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "User",
+            content: userContentParts.join("\n"),
+            timeStamp: Date.now(),
+            isImage: false,
+          },
+        ]);
+
+        const formData = new FormData();
+        formData.append("image", file);
+        formData.append("chatId", selectedChat._id);
+        formData.append("prompt", prompt);
+
+        const { data } = await axios.post(
+          "/api/message/analyze-image",
+          formData,
+          {
+            headers: {
+              Authorization: token,
+              "Content-Type": "multipart/form-data",
+            },
+          },
+        );
+
+        if (data.success) {
+          setMessages((prev) => [...prev, data.message]);
+          fetchUser();
+          setMode("text");
+        } else {
+          toast.error(data.message);
+          setMessages((prev) => prev.slice(0, -1));
+          setPrompt(promptCoppy);
+        }
       } else {
-        toast.error(data.message);
-        setPrompt(promptCoppy);
+        setPrompt("");
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "User",
+            content: prompt,
+            timeStamp: Date.now(),
+            isImage: false,
+          },
+        ]);
+
+        const { data } = await axios.post(
+          `/api/message/${mode}`,
+          { chatId: selectedChat._id, prompt, isPublished },
+          {
+            headers: { Authorization: token },
+          },
+        );
+
+        if (data.success) {
+          setMessages((prev) => [...prev, data.message]);
+          fetchUser();
+        } else {
+          toast.error(data.message);
+          setPrompt(promptCoppy);
+        }
       }
     } catch (error) {
       toast.error(error.message);
@@ -55,6 +108,11 @@ const ChatBox = () => {
       setPrompt("");
       setLoading(false);
       fetchUser();
+      setSelectedFileName("");
+      setFile(null);
+      if (fileRef.current) {
+        fileRef.current.value = "";
+      }
     }
   };
 
@@ -63,71 +121,19 @@ const ChatBox = () => {
       const selectedFile = e.target.files[0];
       if (!selectedFile) return;
 
-      setLoading(true);
-
-      let selectedMode = "";
-
-      if (selectedFile.type.startsWith("image/")) {
-        selectedMode = "analyze-image";
-      } else {
-        selectedMode = "notes-gen";
+      if (!selectedFile.type.startsWith("image/")) {
+        toast.error("Please select an image file only.");
+        return;
       }
 
-      setMode(selectedMode);
       setFile(selectedFile);
       setSelectedFileName(selectedFile.name);
-      setPrompt("");
-
-      // Add user message with file info
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "User",
-          content: `[${selectedMode === "analyze-image" ? "Image" : "Document"}] ${selectedFile.name}`,
-          timeStamp: Date.now(),
-          isImage: false,
-        },
-      ]);
-
-      const formData = new FormData();
-
-      if (selectedMode === "analyze-image") {
-        formData.append("image", selectedFile);
-      } else {
-        formData.append("document", selectedFile);
-      }
-
-      formData.append("chatId", selectedChat._id);
-
-      const { data } = await axios.post(
-        `/api/message/${selectedMode}`,
-        formData,
-        {
-          headers: {
-            Authorization: token,
-            "Content-Type": "multipart/form-data",
-          },
-        },
+      setPrompt((prev) =>
+        prev?.trim() ? `${prev.trim()} ${selectedFile.name}` : selectedFile.name,
       );
-
-      if (data.success) {
-        setMessages((prev) => [...prev, data.message]);
-        fetchUser();
-        setMode("text");
-      } else {
-        toast.error(data.message);
-        // Remove user message if failed
-        setMessages((prev) => prev.slice(0, -1));
-        setMode("text");
-      }
+      e.target.value = "";
     } catch (error) {
       toast.error(error.message);
-      // Remove user message if failed
-      setMessages((prev) => prev.slice(0, -1));
-    } finally {
-      setLoading(false);
-      setSelectedFileName("");
-      setFile(null);
     }
   };
 
@@ -151,11 +157,7 @@ const ChatBox = () => {
         <div ref={containerRef} className="flex-1 mb-5 overflow-y-scroll">
           {messages.length === 0 && (
             <div className="h-full flex-col flex items-center justify-center gap-2 text-primary">
-              {/* <img
-                src={theme === "dark" ? assets.logo_full_dark_g: assets.pageLogo}
-                alt=""
-                className="w-full max-w-56 sm:max-w-68"
-              /> */}
+              
               <p className="text-violet-700 text-4xl dark:text-blue-700">
                 MirrorChat
               </p>
@@ -200,6 +202,10 @@ const ChatBox = () => {
               setMode(e.target.value);
               setPrompt("");
               setFile(null);
+              setSelectedFileName("");
+              if (fileRef.current) {
+                fileRef.current.value = "";
+              }
             }}
             value={mode}
             className="text-sm pl-3 pr-2 outline-none"
@@ -211,20 +217,44 @@ const ChatBox = () => {
               Image
             </option>
           </select>
-          <input
+          <textarea
+          rows={1}
             onChange={(e) => setPrompt(e.target.value)}
+            onInput={textInput}
+            ref={textareaRef}
             type="text"
-            className="flex-1 w-full text-sm outline-none"
+            
+            className="flex-1  text-sm outline-none
+            w-full p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-hidden"
             value={prompt}
             required={!file}
-            disabled={file}
-          />
+            disabled={loading}>
+          </textarea>
           <button
             type="button"
             onClick={() => fileRef.current.click()}
-            className="text-2xl font-bold text-gray-600 dark:text-white cursor-pointer hover:text-primary dark:hover:text-purple-400 transition"
+            className="relative text-2xl font-bold text-gray-600 dark:text-white cursor-pointer hover:text-primary dark:hover:text-purple-400 transition"
           >
-            +
+            <img src={assets.gallery_icon} className="w-6 not-dark:invert" alt="" />
+            {file && (
+              <span
+                role="button"
+                aria-label="Remove selected image"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setFile(null);
+                  setSelectedFileName("");
+                  setPrompt("");
+                  setMode("text");
+                  if (fileRef.current) {
+                    fileRef.current.value = "";
+                  }
+                }}
+                className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-600 text-white text-xs leading-5 text-center hover:bg-red-500"
+              >
+                x
+              </span>
+            )}
           </button>
           <button className="" disabled={loading}>
             <img
@@ -238,7 +268,7 @@ const ChatBox = () => {
             ref={fileRef}
             onChange={handleFileChange}
             style={{ display: "none" }}
-            accept="image/*,.pdf,.doc,.docx,.txt" // Allow images and documents
+            accept="image/*"
           />
         </form>
       </div>
@@ -247,3 +277,4 @@ const ChatBox = () => {
 };
 
 export default ChatBox;
+
