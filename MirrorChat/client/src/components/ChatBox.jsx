@@ -9,6 +9,9 @@ const ChatBox = () => {
     useAppContenxt();
   const containerRef = useRef(null);
   const fileRef = useRef(null);
+  const abortControllerRef = useRef(null);
+  const currentRequestIdRef = useRef(null);
+  const cancelRequestedRef = useRef(false);
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [prompt, setPrompt] = useState("");
@@ -16,12 +19,24 @@ const ChatBox = () => {
   const [isPublished, setIsPublished] = useState(false);
   const [file, setFile] = useState(null);
   const [selectedFileName, setSelectedFileName] = useState("");
-   const textareaRef = useRef(null);
+  const textareaRef = useRef(null);
 
+  const resetTextareaHeight = () => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+  };
 
+  const createRequestId = () => {
+    if (typeof crypto !== "undefined" && crypto.randomUUID) {
+      return crypto.randomUUID();
+    }
+    return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  };
 
   const textInput = () => {
     const el = textareaRef.current;
+    if (!el) return;
     el.style.height = "auto";
     el.style.height = el.scrollHeight + "px";
   };
@@ -31,6 +46,11 @@ const ChatBox = () => {
       e.preventDefault();
       if (!user) return toast("Login to send message");
       setLoading(true);
+      cancelRequestedRef.current = false;
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+      const requestId = createRequestId();
+      currentRequestIdRef.current = requestId;
       const promptCoppy = prompt;
 
       if (file) {
@@ -46,6 +66,7 @@ const ChatBox = () => {
             content: userContentParts.join("\n"),
             timeStamp: Date.now(),
             isImage: false,
+            requestId,
           },
         ]);
 
@@ -53,6 +74,7 @@ const ChatBox = () => {
         formData.append("image", file);
         formData.append("chatId", selectedChat._id);
         formData.append("prompt", prompt);
+        formData.append("requestId", requestId);
 
         const { data } = await axios.post(
           "/api/message/analyze-image",
@@ -62,6 +84,7 @@ const ChatBox = () => {
               Authorization: token,
               "Content-Type": "multipart/form-data",
             },
+            signal: controller.signal,
           },
         );
 
@@ -83,14 +106,16 @@ const ChatBox = () => {
             content: prompt,
             timeStamp: Date.now(),
             isImage: false,
+            requestId,
           },
         ]);
 
         const { data } = await axios.post(
           `/api/message/${mode}`,
-          { chatId: selectedChat._id, prompt, isPublished },
+          { chatId: selectedChat._id, prompt, isPublished, requestId },
           {
             headers: { Authorization: token },
+            signal: controller.signal,
           },
         );
 
@@ -103,17 +128,51 @@ const ChatBox = () => {
         }
       }
     } catch (error) {
+      if (error?.name === "CanceledError" || error?.code === "ERR_CANCELED") {
+        return;
+      }
       toast.error(error.message);
     } finally {
-      setPrompt("");
+      const wasCanceled = cancelRequestedRef.current;
+      if (!wasCanceled) {
+        setPrompt("");
+      }
       setLoading(false);
-      fetchUser();
-      setSelectedFileName("");
-      setFile(null);
+      if (!wasCanceled) {
+        fetchUser();
+        setSelectedFileName("");
+        setFile(null);
+        resetTextareaHeight();
+      }
+      abortControllerRef.current = null;
+      currentRequestIdRef.current = null;
       if (fileRef.current) {
-        fileRef.current.value = "";
+        if (!wasCanceled) {
+          fileRef.current.value = "";
+        }
       }
     }
+  };
+
+  const handleCancel = async () => {
+    cancelRequestedRef.current = true;
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    const requestId = currentRequestIdRef.current;
+    if (requestId && selectedChat?._id) {
+      try {
+        await axios.post(
+          "/api/message/cancel",
+          { chatId: selectedChat._id, requestId },
+          { headers: { Authorization: token } },
+        );
+      } catch (error) {
+        // Silent: cancel is best-effort
+      }
+    }
+    setLoading(false);
   };
 
   const handleFileChange = async (e) => {
@@ -128,9 +187,6 @@ const ChatBox = () => {
 
       setFile(selectedFile);
       setSelectedFileName(selectedFile.name);
-      setPrompt((prev) =>
-        prev?.trim() ? `${prev.trim()} ${selectedFile.name}` : selectedFile.name,
-      );
       e.target.value = "";
     } catch (error) {
       toast.error(error.message);
@@ -195,74 +251,96 @@ const ChatBox = () => {
         {/* input  */}
         <form
           onSubmit={onSubmit}
-          className="bg-primary/20 dark:bg-[#583C79]/30 border border-primary dark:border-[#80609F]/30 rounded-full w-full max-w-2xl p-3 pl-4 mx-auto flex gap-4 items-center"
+          className="bg-primary/20 dark:bg-[#583C79]/30 border border-primary dark:border-[#80609F]/30 rounded-2xl w-full max-w-2xl p-3 pl-4 mx-auto flex flex-col gap-3"
         >
-          <select
-            onChange={(e) => {
-              setMode(e.target.value);
-              setPrompt("");
-              setFile(null);
-              setSelectedFileName("");
-              if (fileRef.current) {
-                fileRef.current.value = "";
-              }
-            }}
-            value={mode}
-            className="text-sm pl-3 pr-2 outline-none"
-          >
-            <option value="text" className="dark:bg-purple-900">
-              Text
-            </option>
-            <option className="dark:bg-purple-900" value="image">
-              Image
-            </option>
-          </select>
-          <textarea
-          rows={1}
-            onChange={(e) => setPrompt(e.target.value)}
-            onInput={textInput}
-            ref={textareaRef}
-            type="text"
-            
-            className="flex-1  text-sm outline-none
-            w-full p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-hidden"
-            value={prompt}
-            required={!file}
-            disabled={loading}>
-          </textarea>
-          <button
-            type="button"
-            onClick={() => fileRef.current.click()}
-            className="relative text-2xl font-bold text-gray-600 dark:text-white cursor-pointer hover:text-primary dark:hover:text-purple-400 transition"
-          >
-            <img src={assets.gallery_icon} className="w-6 not-dark:invert" alt="" />
-            {file && (
-              <span
-                role="button"
+          <div className="flex items-center gap-3">
+            <select
+              onChange={(e) => {
+                setMode(e.target.value);
+                setPrompt("");
+                setFile(null);
+                setSelectedFileName("");
+                resetTextareaHeight();
+                if (fileRef.current) {
+                  fileRef.current.value = "";
+                }
+              }}
+              value={mode}
+              className="text-sm pl-3 pr-2 outline-none bg-transparent"
+            >
+              <option value="text" className="dark:bg-purple-900">
+                Text
+              </option>
+              <option className="dark:bg-purple-900" value="image">
+                Image
+              </option>
+            </select>
+
+            <div className="flex-1" />
+
+            <button
+              type="button"
+              onClick={() => fileRef.current.click()}
+              className="relative text-2xl font-bold text-gray-600 dark:text-white cursor-pointer hover:text-primary dark:hover:text-purple-400 transition"
+            >
+              <img src={assets.gallery_icon} className="w-6 not-dark:invert" alt="" />
+            </button>
+            <button
+              className=""
+              type="submit"
+              onClick={(e) => {
+                if (loading) {
+                  e.preventDefault();
+                  handleCancel();
+                }
+              }}
+            >
+              <img
+                src={loading ? assets.stop_icon : assets.send_icon}
+                className="w-8 cursor-pointer"
+                alt=""
+              />
+            </button>
+          </div>
+
+          {file && (
+            <div className="flex items-center justify-between gap-3 bg-white/70 dark:bg-[#3a2a50]/60 border border-primary/40 dark:border-[#80609F]/40 rounded-xl px-3 py-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-xs text-gray-500 dark:text-gray-200">Image</span>
+                <span className="text-xs font-medium text-gray-800 dark:text-white truncate">
+                  {selectedFileName}
+                </span>
+              </div>
+              <button
+                type="button"
                 aria-label="Remove selected image"
-                onClick={(e) => {
-                  e.stopPropagation();
+                onClick={() => {
                   setFile(null);
                   setSelectedFileName("");
-                  setPrompt("");
                   setMode("text");
                   if (fileRef.current) {
                     fileRef.current.value = "";
                   }
                 }}
-                className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-600 text-white text-xs leading-5 text-center hover:bg-red-500"
+                className="text-xs px-2 py-1 rounded-full bg-red-600 text-white hover:bg-red-500"
               >
-                x
-              </span>
-            )}
-          </button>
-          <button className="" disabled={loading}>
-            <img
-              src={loading ? assets.stop_icon : assets.send_icon}
-              className="w-8 cursor-pointer"
-              alt=""
-            />
-          </button>
+                Remove
+              </button>
+            </div>
+          )}
+
+          <textarea
+            rows={1}
+            onChange={(e) => setPrompt(e.target.value)}
+            onInput={textInput}
+            ref={textareaRef}
+            type="text"
+            className="text-sm outline-none w-full p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-y-auto min-h-[44px] max-h-40"
+            value={prompt}
+            required={!file}
+            disabled={loading}
+            placeholder={file ? "Type your message..." : "Type a message..."}
+          />
           <input
             type="file"
             ref={fileRef}
@@ -277,4 +355,3 @@ const ChatBox = () => {
 };
 
 export default ChatBox;
-

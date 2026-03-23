@@ -4,6 +4,24 @@ import ai from "../config/gerateText.js";
 import axios from "axios";
 import imagekit from "../config/imagekit.js";
 
+const cancelledRequests = new Set();
+const markCancelled = (requestId) => {
+  if (!requestId) return;
+  cancelledRequests.add(requestId);
+  setTimeout(() => cancelledRequests.delete(requestId), 5 * 60 * 1000);
+};
+
+const removeMessagesByRequestId = async (chatId, userId, requestId) => {
+  if (!requestId) return;
+  await Chat.updateOne(
+    { _id: chatId, userId },
+    { $pull: { messages: { requestId } } },
+  );
+};
+
+const isCancelled = (requestId) =>
+  requestId ? cancelledRequests.has(requestId) : false;
+
 // Text-based AI chat Message
 
 export const textMessageController = async (req, res) => {
@@ -16,7 +34,7 @@ export const textMessageController = async (req, res) => {
         message: "You have not enough credits to generate a response",
       });
     }
-    const { chatId, prompt } = req.body;
+    const { chatId, prompt, requestId } = req.body;
 
     const chat = await Chat.findOne({ userId, _id: chatId });
     if (!chat) {
@@ -31,6 +49,7 @@ export const textMessageController = async (req, res) => {
       content: prompt,
       timeStamp: Date.now(),
       isImage: false,
+      requestId,
     });
 
     const response = await ai.models.generateContent({
@@ -44,11 +63,20 @@ export const textMessageController = async (req, res) => {
 
     const replyText = response.candidates[0].content.parts[0].text;
 
+    if (isCancelled(requestId)) {
+      await removeMessagesByRequestId(chatId, userId, requestId);
+      return res.json({
+        success: false,
+        message: "Request canceled",
+      });
+    }
+
     const reply = {
       role: "assistant",
       content: replyText,
       timeStamp: Date.now(),
       isImage: false,
+      requestId,
     };
 
     chat.messages.push(reply);
@@ -80,13 +108,14 @@ export const imageMessageController = async (req, res) => {
       });
     }
 
-    const { prompt, chatId, isPublished } = req.body;
+    const { prompt, chatId, isPublished, requestId } = req.body;
     const chat = await Chat.findOne({ userId, _id: chatId });
     chat.messages.push({
       role: "User",
       content: prompt,
       timeStamp: Date.now(),
       isImage: false,
+      requestId,
     });
 
     // Encode the prompt
@@ -114,12 +143,21 @@ export const imageMessageController = async (req, res) => {
       folder: "aiProjectImages",
     });
 
+    if (isCancelled(requestId)) {
+      await removeMessagesByRequestId(chatId, userId, requestId);
+      return res.json({
+        success: false,
+        message: "Request canceled",
+      });
+    }
+
     const reply = {
       role: "assistant",
       content: uploadResponse.url,
       timeStamp: Date.now(),
       isImage: true,
       isPublished,
+      requestId,
     };
 
     chat.messages.push(reply);
@@ -182,7 +220,7 @@ export const analyzeImageController = async (req, res) => {
       });
     }
 
-    const { chatId, prompt } = req.body;
+    const { chatId, prompt, requestId } = req.body;
 
     const chat = await Chat.findOne({ userId, _id: chatId });
 
@@ -211,6 +249,7 @@ export const analyzeImageController = async (req, res) => {
       content: userMessageContentParts.join("\n"),
       timeStamp: Date.now(),
       isImage: false,
+      requestId,
     });
 
     // Convert image buffer to base64
@@ -239,11 +278,20 @@ export const analyzeImageController = async (req, res) => {
 
     const result = response.candidates[0].content.parts[0].text;
 
+    if (isCancelled(requestId)) {
+      await removeMessagesByRequestId(chatId, userId, requestId);
+      return res.json({
+        success: false,
+        message: "Request canceled",
+      });
+    }
+
     const reply = {
       role: "assistant",
       content: result,
       timeStamp: Date.now(),
       isImage: false,
+      requestId,
     };
 
     chat.messages.push(reply);
@@ -254,6 +302,33 @@ export const analyzeImageController = async (req, res) => {
     res.json({
       success: true,
       message: reply,
+    });
+  } catch (error) {
+    res.json({
+      success: false,
+      message: error.message || "Something went wrong",
+    });
+  }
+};
+
+export const cancelMessageController = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { chatId, requestId } = req.body;
+
+    if (!chatId || !requestId) {
+      return res.json({
+        success: false,
+        message: "chatId and requestId are required",
+      });
+    }
+
+    markCancelled(requestId);
+    await removeMessagesByRequestId(chatId, userId, requestId);
+
+    return res.json({
+      success: true,
+      message: "Request canceled",
     });
   } catch (error) {
     res.json({

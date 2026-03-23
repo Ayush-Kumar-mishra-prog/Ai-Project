@@ -15,6 +15,7 @@ const chatSchema = new mongoose.Schema(
         role: { type: String, required: true },
         content: { type: String, required: true },
         timeStamp: { type: String, required: true },
+        requestId: { type: String },
       },
     ],
   },
